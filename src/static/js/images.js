@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         </span>
                         <span class="file-name">${fileData.name}</span>
                     </div>
-                    <div class="file-col file-col-url">https://sharefile.xyz/${fileData.name}</div>
+                    <div class="file-col file-col-url">${fileData.name}</div>
                     <div class="file-col file-col-delete">
                         <button class="delete-btn" data-index="${index}">
                             <img src="/static/img/delete.png" alt="delete icon">

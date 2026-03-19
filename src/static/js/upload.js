@@ -2,7 +2,6 @@ document.addEventListener('DOMContentLoaded', function () {
     document.addEventListener('keydown', function (event) {
         if (event.key === 'Escape' || event.key === 'F5') {
             event.preventDefault();
-
             sessionStorage.removeItem('pageWasVisited');
             window.location.href = '/index.html';
         }
@@ -63,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (filesAdded) {
             if (currentUploadInput) {
-                currentUploadInput.value = `https://sharefile.xyz/${lastFileName}`;
+                currentUploadInput.value = `${lastFileName}`;
             }
             alert("Files selected successfully! Go to the 'Images' tab to view them.");
         }

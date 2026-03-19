@@ -2,6 +2,7 @@ import http.server
 import socketserver
 import os
 import json
+from validators import validate_image_file
 
 class ImageServerHandler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
@@ -52,6 +53,17 @@ class ImageServerHandler(http.server.BaseHTTPRequestHandler):
             self.end_headers()
             error_response = { 'success': False, 'error': str(e) }
             self.wfile.write(json.dumps(error_response).encode('utf-8'))
+
+    def _extract_filename(self, content_type, form_data):
+        try:
+            decoded = form_data.decode('utf-8', errors='ignore')
+            import re
+            match = re.search(r'filename="([^"]+)"', decoded)
+            if match:
+                return match.group(1)
+        except Exception as e:
+            pass
+        return "unknown"
 
     def serve_template(self, filename):
         try:
