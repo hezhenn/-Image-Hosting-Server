@@ -1,5 +1,6 @@
 import http.server
 import io
+import logging
 import socketserver
 import os
 import json
@@ -9,23 +10,35 @@ from validators import validate_image_file
 from file_handler import save_file, delete_file
 from database import DatabaseManager
 
-db = DatabaseManager()
+LOG_DIR = "/logs"
+LOG_FILE = os.path.join(LOG_DIR, "app.log")
+PORT = 8000
 
+os.makedirs(LOG_DIR, exist_ok=True)
+
+logging.basicConfig(
+    filename=LOG_FILE,
+    level=logging.INFO,
+    format="[%(asctime)s] %(levelname)s: %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
+
+db = DatabaseManager()
 
 class ImageServerHandler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
         routes = {
             '/': 'index.html',
             '/upload': 'upload.html',
-            '/images-list': 'images.html',
+            '/images-list': 'images.html'
         }
 
         if self.path in routes:
             self.serve_template(routes[self.path])
         elif self.path.startswith('/static/'):
             self.serve_static(self.path)
-        elif self.path.startswith('/images/'):
-            self.serve_uploaded_image(self.path)
+        elif self.path.startswith('/api/images-list'):
+            self.handle_get_images()
         else:
             self.send_response(404)
             self.end_headers()
@@ -33,17 +46,10 @@ class ImageServerHandler(http.server.BaseHTTPRequestHandler):
     def do_POST(self):
         if self.path == '/upload':
             self.handle_upload()
-        elif self.path == '/delete':
-            self.handle_delete()
+        elif self.path.startswith('/delete/'):
+            self.handle_delete_image()
         else:
             print(f'404 - Path not found: {self.path}')
-            self.send_response(404)
-            self.end_headers()
-
-    def do_DELETE(self):
-        if self.path.startswith('api/images/'):
-            self.handle_delete()
-        else:
             self.send_response(404)
             self.end_headers()
 
@@ -92,7 +98,7 @@ class ImageServerHandler(http.server.BaseHTTPRequestHandler):
             saved_name = save_file(file_bytes, filename)
 
             ext = filename.lower().split('.')[-1]
-            db.save_metadata(
+            saved_to_db = db.save_metadata(
                 filename = saved_name,
                 original_name=filename,
                 size=len(file_bytes),
@@ -116,6 +122,7 @@ class ImageServerHandler(http.server.BaseHTTPRequestHandler):
             self.wfile.write(json.dumps({
                 'success': True,
                 'message': 'File uploaded successfully',
+                'id': saved_to_db,
                 'filename': saved_name,
                 'url': f'/images/{saved_name}'
             }).encode('utf-8'))
@@ -162,13 +169,9 @@ class ImageServerHandler(http.server.BaseHTTPRequestHandler):
 
             if filename:
                 delete_file(filename)
-                self.send_response(200)
-                self.send_header('Content-type', 'application/json')
+                self.send_response(303)
+                self.send_header('Location', '/images-list')
                 self.end_headers()
-                self.wfile.write(json.dumps({
-                    'success': True,
-                    'message': f'Image {filename} deleted successfully',
-                }).encode('utf-8'))
             else:
                 self.send_response(404)
                 self.send_header('Content-type', 'application/json')
@@ -224,7 +227,7 @@ class ImageServerHandler(http.server.BaseHTTPRequestHandler):
                 }).encode('utf-8'))
 
         except Exception as e:
-            print(f"Erro in delete: {e}")
+            print(f"Error in delete: {e}")
             self.send_response(500)
             self.send_header('Content-type', 'application/json')
             self.end_headers()
@@ -238,7 +241,7 @@ class ImageServerHandler(http.server.BaseHTTPRequestHandler):
                 return match.group(1)
         except Exception as e:
             pass
-        return "unknown"
+        return None
 
 
     def _extract_file_bytes(self, form_data):
@@ -323,7 +326,7 @@ def run_server(port=8000):
     port = int(os.environ.get("PORT", port))
     db.connect()
     try:
-        with socketserver.TCPServer(("", port), ImageServerHandler) as httpd:
+        with socketserver.ThreadingTCPServer(("", port), ImageServerHandler) as httpd:
             print(f"Server running on port {port}...")
             try:
                 httpd.serve_forever()

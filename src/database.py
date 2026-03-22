@@ -32,9 +32,10 @@ class DatabaseManager:
             with self.connection.cursor() as cursor:
                 cursor.execute("""
                 INSERT INTO images (filename, original_name, size, file_type) 
-                VALUES (%s, %s, %s, %s)""", (filename, original_name, size, file_type))
+                VALUES (%s, %s, %s, %s) RETURNING id""" , (filename, original_name, size, file_type))
+                result = cursor.fetchone()
                 self.connection.commit()
-                return True
+                return result[0] if result else False
         except Exception as e:
             print(f"Save error: {e}")
             return False
@@ -45,7 +46,7 @@ class DatabaseManager:
                 offset = (page - 1) * per_page
                 cursor.execute("""
                 SELECT * FROM images
-                ORDER BY upload_time DESC
+                ORDER BY upload_time DESC, id DESC
                 LIMIT %s OFFSET %s """, (per_page, offset))
                 images = cursor.fetchall()
 
@@ -55,6 +56,7 @@ class DatabaseManager:
                 return images, total
         except Exception as e:
             print(f"Retrieval error: {e}")
+            return [], 0
 
     def delete_image(self, image_id):
         try:
@@ -62,7 +64,7 @@ class DatabaseManager:
                 cursor.execute("SELECT filename FROM images WHERE id = %s", (image_id,))
                 result = cursor.fetchone()
                 if not result:
-                    return False
+                    return None
 
                 filename = result[0]
                 cursor.execute("DELETE FROM images WHERE id = %s", (image_id,))
@@ -70,4 +72,4 @@ class DatabaseManager:
                 return filename
         except Exception as e:
             print(f"Delete error: {e}")
-            return False
+            return None

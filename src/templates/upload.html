@@ -20,8 +20,8 @@
         <p class="upload__description">Upload selfies, memes, or any fun pictures here.</p>
     </section>
     <nav class="upload__tabs">
-        <button class="upload__tab" id="upload-tab-btn">Upload</button>
-        <button class="upload__tab " id="images-tab-btn">Images</button>
+        <a class="upload__tab upload__tab--active" id="upload-tab-btn" href="/upload">Upload</a>
+        <a class="upload__tab" id="images-tab-btn" href="/images-list">Images</a>
     </nav>
     <section class="upload__form">
         <div class="upload__dropzone">
@@ -33,7 +33,7 @@
                 Maximum file size is 5MB</p>
         </div>
         <div class="upload__button">
-            <input type="file" id="file-upload" accept="image/*" style="display: none;" multiple>
+            <input type="file" id="file-upload" accept="image/*" style="display: none;">
             <label for="file-upload" class="upload__button-btn">Browse your file</label>
         </div>
         <div class="upload__container">
@@ -45,6 +45,8 @@
                 </div>
             </div>
         </div>
+
+        <p id="upload-message" style="margin-top: 16px; text-align: center; font-weight: 700; font-size: 18px;"></p>
     </section>
     <section id="file-list-wrapper">
     </section>

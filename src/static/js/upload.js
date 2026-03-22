@@ -1,166 +1,80 @@
-document.addEventListener('DOMContentLoaded', function () {
-    document.addEventListener('keydown', function (event) {
-        if (event.key === 'Escape' || event.key === 'F5') {
-            event.preventDefault();
-            window.location.href = '/upload';
-        }
-    });
+document.addEventListener("DOMContentLoaded", () => {
+    const fileInput = document.getElementById("file-upload");
+    const dropzone = document.querySelector(".upload__dropzone");
+    const urlInput = document.querySelector(".upload__input");
+    const copyButton = document.querySelector(".upload__copy");
+    const messageBox = document.getElementById("upload-message");
 
-    const fileUpload = document.getElementById('file-upload');
-    const imagesButton = document.getElementById('images-tab-btn');
-    const dropzone = document.querySelector('.upload__dropzone');
-    const currentUploadInput = document.querySelector('.upload__input');
-    const copyButton = document.querySelector('.upload__copy');
-
-    if (imagesButton) {
-        imagesButton.addEventListener('click', () => {
-            window.location.href = '/images-list';
-        });
-    }
-
-    const showMessage = (message, isError = false) => {
-        let msgEl = document.querySelector('.upload__message');
-
-        if (!msgEl) {
-            msgEl = document.createElement('p');
-            msgEl.className = 'upload__message';
-            dropzone?.parentNode?.insertBefore(msgEl, dropzone.nextSibling);
-        }
-
-        msgEl.textContent = message;
-        msgEl.style.color = isError ? '#e53e3e' : '#38a169';
-    };
-
-    const updateTabStyles = () => {
-        const uploadTab = document.getElementById('upload-tab-btn');
-        const imagesTab = document.getElementById('images-tab-btn');
-
-        if (!uploadTab || !imagesTab) return;
-
-        const isImagesPage = window.location.pathname.includes('/images-list');
-
-        uploadTab.classList.remove('upload__tab--active');
-        imagesTab.classList.remove('upload__tab--active');
-
-        if (isImagesPage) {
-            imagesTab.classList.add('upload__tab--active');
-        } else {
-            uploadTab.classList.add('upload__tab--active');
-        }
+    const showMessage = (text, isError = false) => {
+        messageBox.textContent = text;
+        messageBox.style.color = isError ? "red" : "green";
     };
 
     const uploadFile = async (file) => {
-        const formData = new FormData();
-        formData.append('file', file);
+        const allowedTypes = ["image/jpeg", "image/png", "image/gif"];
+        const maxSize = 5 * 1024 * 1024;
 
-        try {
-            const response = await fetch('/upload', {
-                method: 'POST',
-                body: formData
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                const storedFiles = JSON.parse(localStorage.getItem('uploadedImages')) || [];
-
-                const getNextImageNumber = () => {
-                    return storedFiles.filter(f => f.displayName && f.displayName.startsWith('image')).length + 1;
-                };
-
-                const extIndex = file.name.lastIndexOf('.');
-                const ext = extIndex !== -1 ? file.name.substring(extIndex) : '';
-                const displayName = `image${String(getNextImageNumber()).padStart(2, '0')}${ext}`;
-
-                const newFileData = {
-                    name: data.filename,
-                    displayName: displayName,
-                    originalName: file.name,
-                    url: `/images/${data.filename}`
-                };
-
-                storedFiles.push(newFileData);
-                localStorage.setItem('uploadedImages', JSON.stringify(storedFiles));
-
-                if (currentUploadInput) {
-                    currentUploadInput.value = `${window.location.origin}/images/${data.filename}`;
-                }
-
-                updateTabStyles();
-                showMessage('File uploaded successfully!');
-            } else {
-                showMessage(data.message || 'Upload failed.', true);
-            }
-        } catch (err) {
-            console.error(err);
-            showMessage('Something went wrong. Please try again.', true);
-        }
-    };
-
-    const handleAndStoreFiles = async (files) => {
-        if (!files || files.length === 0) {
+        if (!allowedTypes.includes(file.type)) {
+            showMessage("Only JPG, PNG and GIF files are allowed.", true);
             return;
         }
 
-        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
-        const MAX_SIZE_MB = 5;
-        const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
+        if (file.size > maxSize) {
+            showMessage("Maximum file size is 5MB.", true);
+            return;
+        }
 
-        for (const file of files) {
-            if (!allowedTypes.includes(file.type)) {
-                showMessage(`File "${file.name}" has unsupported type.`, true);
-                continue;
+        const formData = new FormData();
+        formData.append("file", file);
+
+        try {
+            showMessage("Uploading...");
+            const response = await fetch("/upload", {
+                method: "POST",
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (!result.success) {
+                showMessage(result.message || "Upload failed.", true);
+                return;
             }
 
-            if (file.size > MAX_SIZE_BYTES) {
-                showMessage(`File "${file.name}" is larger than 5MB.`, true);
-                continue;
-            }
-
-            await uploadFile(file);
+            urlInput.value = result.url;
+            showMessage(`Upload successful. Image ID: ${result.id}`);
+        } catch (error) {
+            showMessage("Upload failed due to server error.", true);
+            console.error(error);
         }
     };
 
-    if (copyButton && currentUploadInput) {
-        copyButton.addEventListener('click', () => {
-            const textToCopy = currentUploadInput.value;
+    fileInput.addEventListener("change", (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            uploadFile(file);
+        }
+    });
 
-            if (textToCopy && textToCopy !== 'https://') {
-                navigator.clipboard.writeText(textToCopy).then(() => {
-                    copyButton.textContent = 'COPIED!';
-                    setTimeout(() => {
-                        copyButton.textContent = 'COPY';
-                    }, 2000);
-                }).catch(err => {
-                    console.error('Failed to copy text:', err);
-                });
-            }
-        });
-    }
+    dropzone.addEventListener("dragover", (event) => {
+        event.preventDefault();
+    });
 
-    if (fileUpload) {
-        fileUpload.addEventListener('change', async (event) => {
-            await handleAndStoreFiles(event.target.files);
-            event.target.value = '';
-        });
-    }
+    dropzone.addEventListener("drop", (event) => {
+        event.preventDefault();
+        const file = event.dataTransfer.files[0];
+        if (file) {
+            uploadFile(file);
+        }
+    });
 
-    if (dropzone) {
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            dropzone.addEventListener(eventName, (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-            });
-        });
-
-        dropzone.addEventListener('dragenter', () => dropzone.classList.add('dragover'));
-        dropzone.addEventListener('dragover', () => dropzone.classList.add('dragover'));
-        dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
-        dropzone.addEventListener('drop', async (event) => {
-            dropzone.classList.remove('dragover');
-            await handleAndStoreFiles(event.dataTransfer.files);
-        });
-    }
-
-    updateTabStyles();
+    copyButton.addEventListener("click", async () => {
+        if (!urlInput.value) return;
+        try {
+            await navigator.clipboard.writeText(urlInput.value);
+            showMessage("URL copied.");
+        } catch (error) {
+            showMessage("Failed to copy URL.", true);
+        }
+    });
 });

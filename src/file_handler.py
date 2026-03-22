@@ -1,7 +1,7 @@
 import uuid
 from pathlib import Path
 
-IMAGES_DIR = Path(__file__).parent.parent / 'images'
+IMAGES_DIR = Path("/images")
 
 
 def generate_unique_filename(original_name):
