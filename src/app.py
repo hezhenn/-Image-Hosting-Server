@@ -7,6 +7,10 @@ import re
 
 from validators import validate_image_file
 from file_handler import save_file, delete_file
+from database import DatabaseManager
+
+db = DatabaseManager()
+
 
 class ImageServerHandler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
@@ -33,6 +37,13 @@ class ImageServerHandler(http.server.BaseHTTPRequestHandler):
             self.handle_delete()
         else:
             print(f'404 - Path not found: {self.path}')
+            self.send_response(404)
+            self.end_headers()
+
+    def do_DELETE(self):
+        if self.path.startswith('api/images/'):
+            self.handle_delete()
+        else:
             self.send_response(404)
             self.end_headers()
 
@@ -80,6 +91,14 @@ class ImageServerHandler(http.server.BaseHTTPRequestHandler):
 
             saved_name = save_file(file_bytes, filename)
 
+            ext = filename.lower().split('.')[-1]
+            db.save_metadata(
+                filename = saved_name,
+                original_name=filename,
+                size=len(file_bytes),
+                file_type = ext
+            )
+
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
             self.end_headers()
@@ -99,6 +118,60 @@ class ImageServerHandler(http.server.BaseHTTPRequestHandler):
                 'success': False,
                 'error': str(e)
             }).encode('utf-8'))
+
+    def handle_get_images(self):
+        try:
+            from urllib.parse import urlparse, parse_qs
+            parsed = urlparse(self.path)
+            params = parse_qs(parsed.query)
+            page = int(params.get('page', [1])[0])
+
+            images, total = db.get_all_images(page=page)
+
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({
+                'success': True,
+                'images': [dict(img) for img in images],
+                'total': total,
+                'page': page
+            }, default=str).encode('utf-8'))
+
+        except Exception as e:
+            self.send_response(500)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({'success': False, 'error': str(e)}).encode('utf-8'))
+
+    def handle_delete_image(self):
+        try:
+            image_id = int(self.path.split('/')[-1])
+            filename = db.delete_image(image_id)
+
+            if filename:
+                delete_file(filename)
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({
+                    'success': True,
+                    'message': f'Image {filename} deleted successfully',
+                }).encode('utf-8'))
+            else:
+                self.send_response(404)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({
+                    'success': False,
+                    'message': 'Image not found',
+                }).encode('utf-8'))
+
+        except Exception as e:
+            self.send_response(500)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({'success': False, 'error': str(e)}).encode('utf-8'))
 
     def handle_delete(self):
         try:
@@ -146,6 +219,17 @@ class ImageServerHandler(http.server.BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(json.dumps({'success': False, 'error': str(e)}).encode('utf-8'))
 
+    def _extract_filename(self, form_data):
+        try:
+            decoded = form_data.decode('utf-8', errors='ignore')
+            match = re.search(r'filename="([^"]+)"', decoded)
+            if match:
+                return match.group(1)
+        except Exception as e:
+            pass
+        return "unknown"
+
+
     def _extract_file_bytes(self, form_data):
         boundary = form_data.split(b'\r\n')[0]
         parts = form_data.split(boundary)
@@ -160,15 +244,6 @@ class ImageServerHandler(http.server.BaseHTTPRequestHandler):
                     return file_content
         return b''
 
-    def _extract_filename(self, form_data):
-        try:
-            decoded = form_data.decode('utf-8', errors='ignore')
-            match = re.search(r'filename="([^"]+)"', decoded)
-            if match:
-                return match.group(1)
-        except Exception as e:
-            pass
-        return "unknown"
 
     def serve_template(self, filename):
         try:
@@ -234,6 +309,8 @@ class ImageServerHandler(http.server.BaseHTTPRequestHandler):
             return 'application/octet-stream'
 
 def run_server(port=8000):
+    port = int(os.environ.get("PORT", port))
+    db.connect()
     try:
         with socketserver.TCPServer(("", port), ImageServerHandler) as httpd:
             print(f"Server running on port {port}...")
@@ -246,6 +323,8 @@ def run_server(port=8000):
             print(f"Port {port} is already in use. Please stop the server | lsof -ti :8000 | xargs kill -9")
         else:
             print(f"Error starting server: {e}")
+    finally:
+        db.disconnect()
 
 if __name__ == '__main__':
     run_server()
