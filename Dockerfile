@@ -7,7 +7,7 @@ RUN apt-get update && apt-get install -y \
 
 RUN useradd --create-home --shell /bin/bash appuser
 
-RUN mkdir -p /images /app/backups && chown -R appuser:appuser /images /app
+RUN mkdir -p /images /logs /backups /app && chown -R appuser:appuser /images /logs /backups /app
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
