@@ -1,286 +1,305 @@
-# 🖼️ Image Hosting Server
+# Image Hosting Server
 
-A containerized image hosting service built with <b>Python</b>, <b>PostgreSQL</b>, <b>Nginx</b>, and <b>Docker Compose</b>.
+![Python](https://img.shields.io/badge/Python-3.12-blue)
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ED)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-336791)
+![Nginx](https://img.shields.io/badge/Nginx-Reverse%20Proxy-009639)
+![Status](https://img.shields.io/badge/Project-Completed-success)
 
-The project supports image uploads, metadata storage, gallery browsing, image deletion, and database backups.
+A containerized image hosting service built with **Python**, **PostgreSQL**, **Nginx**, and **Docker Compose**.
 
----
-
-## 🛠️ Tech Stack
-
-### Backend
-<p>
-  <img src="https://img.shields.io/badge/Python-3.12-blue?style=flat-square&logo=python" alt="Python">
-  <img src="https://img.shields.io/badge/http.server-Standard%20Library-lightgrey?style=flat-square" alt="http.server">
-  <img src="https://img.shields.io/badge/Pillow-Image%20Processing-orange?style=flat-square" alt="Pillow">
-  <img src="https://img.shields.io/badge/psycopg2-PostgreSQL%20Driver-336791?style=flat-square" alt="psycopg2">
-  <img src="https://img.shields.io/badge/python--dotenv-Environment%20Config-yellowgreen?style=flat-square" alt="python-dotenv">
-</p>
-
-### Frontend
-<p>
-  <img src="https://img.shields.io/badge/HTML-Markup-E34F26?style=flat-square&logo=html5&logoColor=white" alt="HTML">
-  <img src="https://img.shields.io/badge/CSS-Styling-1572B6?style=flat-square&logo=css3&logoColor=white" alt="CSS">
-  <img src="https://img.shields.io/badge/JavaScript-Vanilla-F7DF1E?style=flat-square&logo=javascript&logoColor=black" alt="JavaScript">
-</p>
-
-### Infrastructure
-<p>
-  <img src="https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker" alt="Docker">
-  <img src="https://img.shields.io/badge/PostgreSQL-15-336791?style=flat-square&logo=postgresql" alt="PostgreSQL">
-  <img src="https://img.shields.io/badge/Nginx-Reverse%20Proxy-009639?style=flat-square&logo=nginx" alt="Nginx">
-</p>
+The application allows users to upload images, store metadata in a PostgreSQL database, browse uploaded files, delete images, and create database backups. Static files and uploaded images are served through **Nginx**, while the backend is responsible for validation, metadata management, and API logic.
 
 ---
 
-## ✨ Overview
+## Table of Contents
 
-**Image Hosting Server** is a small full-stack web application designed to handle image uploads in a clean, structured, and Dockerized environment.
-
-It extends a basic upload service with:
-
-- persistent image storage through Docker volumes
-- PostgreSQL metadata storage
-- paginated image browsing
-- image deletion by database ID
-- static file delivery via Nginx
-- backup and restore support for the database
-
-This project was created as a practical learning exercise focused on:
-
-- backend development with Python
-- Docker and Docker Compose workflows
-- PostgreSQL integration
-- file handling and validation
-- reverse proxy and static file serving with Nginx
+- [Overview](#overview)
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Architecture](#architecture)
+- [Project Structure](#project-structure)
+- [Getting Started](#getting-started)
+- [Environment Variables](#environment-variables)
+- [Run the Project](#run-the-project)
+- [Usage Flow](#usage-flow)
+- [Routes and API](#routes-and-api)
+- [Database](#database)
+- [Backups](#backups)
+- [Troubleshooting](#troubleshooting)
+- [Future Improvements](#future-improvements)
 
 ---
 
-## 🚀 Features
+## Overview
+
+This project is an **Image Hosting Server 2.0** that extends a basic upload service with:
+
+- persistent image storage using Docker volumes;
+- metadata storage in PostgreSQL;
+- image listing with pagination;
+- image deletion by database ID;
+- Nginx-based static file delivery;
+- database backup and restore support.
+
+It was built as a learning project focused on:
+- backend fundamentals with Python;
+- working with Docker and Docker Compose;
+- integrating PostgreSQL into a web application;
+- handling static files and reverse proxy configuration with Nginx.
+
+---
+
+## Features
 
 - Upload `.jpg`, `.jpeg`, `.png`, and `.gif` images
-- Validate uploaded files (up to **5 MB**)
-- Generate unique filenames for safe storage
-- Serve uploaded files through `/images/<filename>`
-- Store image metadata in PostgreSQL
-- Browse uploaded images on a separate page
-- Paginate the gallery (**10 images per page**)
-- Delete images by ID
-- Run the full stack with Docker Compose
-- Use shared Docker volumes for images, logs, and backups
-- Reverse proxy backend and static content with Nginx
-- Create, list, and restore database backups
+- File size validation (up to **5 MB**)
+- Unique filename generation for uploaded files
+- Static image delivery through `/images/<filename>`
+- Metadata persistence in PostgreSQL
+- Image list page with pagination (**10 items per page**)
+- Delete image by ID
+- Dockerized development and deployment setup
+- Shared Docker volumes for images, logs, and backups
+- Nginx reverse proxy for backend and static content
+- Backup creation, listing, and restore script
 
 ---
 
-## 🏗️ Architecture
+## Tech Stack
+
+**Backend**
+- Python 3.12
+- Standard library HTTP server
+- Pillow
+- psycopg2
+- python-dotenv
+
+**Infrastructure**
+- Docker
+- Docker Compose
+- PostgreSQL 15
+- Nginx
+
+**Frontend**
+- HTML
+- CSS
+- JavaScript (vanilla)
+
+---
+
+## Architecture
 
 The project consists of three main services:
 
 ### `app`
-The Python backend application:
-- handles image uploads
-- validates files
-- stores uploaded images in the shared `/images` volume
-- saves metadata in PostgreSQL
-- provides routes for listing and deleting images
+Python backend application that:
+- accepts uploads;
+- validates images;
+- saves files to the shared `/images` volume;
+- stores metadata in PostgreSQL;
+- exposes routes for listing and deleting images.
 
 ### `db`
-The PostgreSQL database stores metadata such as:
-- image ID
-- filename
-- original filename
-- file size
-- file type
-- upload timestamp
+PostgreSQL database used to store metadata such as:
+- image ID;
+- filename;
+- original filename;
+- file size;
+- file type;
+- upload timestamp.
 
 ### `nginx`
-Nginx is responsible for:
-- reverse proxying requests to the backend
-- serving uploaded images from `/images/`
-- serving frontend static assets from `/static/`
+Acts as:
+- reverse proxy for the Python backend;
+- static file server for `/images/`;
+- static asset server for `/static/`.
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```text
-image-hosting-server/
-├── backups/
+.
 ├── config/
 │   ├── init.sql
 │   └── nginx.conf
-├── images/
 ├── scripts/
 │   └── backup.py
 ├── src/
-│   ├── app.py
-│   ├── database.py
-│   ├── file_handler.py
-│   ├── validators.py
 │   ├── static/
 │   │   ├── css/
 │   │   ├── img/
 │   │   └── js/
-│   └── templates/
-│       ├── index.html
-│       ├── upload.html
-│       └── images.html
-├── .env
-├── .env.example
-├── .gitignore
+│   ├── templates/
+│   │   ├── images.html
+│   │   ├── index.html
+│   │   └── upload.html
+│   ├── app.py
+│   ├── database.py
+│   ├── file_handler.py
+│   └── validators.py
 ├── compose.yaml
 ├── Dockerfile
 ├── requirements.txt
 └── README.md
 ```
-## ⚙️ How It Works
 
-1. The user uploads an image from the `/upload` page.
-2. The Python backend validates the file and saves it into the `/images` Docker volume.
-3. Metadata is saved to PostgreSQL in the `images` table.
-4. Nginx serves uploaded files from `/images/<filename>`.
-5. The gallery page requests metadata from `/api/images-list?page=<n>` and renders a paginated list.
-6. Images can be deleted through `/delete/<id>`.
+---
 
-## 📦 Requirements
+## Getting Started
+
+### Requirements
+
+Make sure you have installed:
 
 - Docker
 - Docker Compose
 
-## 🔐 Environment Variables
+---
 
-Create a `.env` file in the project root. You can use `.env.example` as a template.
+## Environment Variables
+
+Create a `.env` file in the project root.
 
 Example:
 
 ```env
-# Database Configuration
 DB_HOST=db
-DB_NAME=image_hosting_server
-DB_USER=postgres
-DB_PASSWORD=your_password
 DB_PORT=5432
-
-# Server Configuration
-PORT=8000
-
-# PostgreSQL Docker Configuration
-POSTGRES_DB=image_hosting_server
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=your_password
-```
-
-Optional variables for the backup script:
-
-```env
+DB_NAME=image_hosting_server_db
+DB_USER=postgres
+DB_PASSWORD=postgres
 BACKUP_DIR=./backups
-DB_CONTAINER_NAME=imagehostingserver-db-1
+DB_CONTAINER_NAME=image-hosting-server-db-1
 ```
 
-## 🚀 Running the Project
-
-### 1. Clone the repository
+> The exact database container name may differ depending on your Docker Compose project name.  
+> You can check it with:
 
 ```bash
-git clone <your-repository-url>
-cd image-hosting-server
+docker compose ps
 ```
 
-### 2. Configure environment variables
+---
 
-```bash
-cp .env.example .env
-```
+## Run the Project
 
-Edit `.env` and set your values.
-
-### 3. Start the application
+Build and start all containers:
 
 ```bash
 docker compose up --build
 ```
 
-To run in detached mode:
+Run in detached mode:
 
 ```bash
 docker compose up --build -d
 ```
 
-### 4. Open the application
+Stop containers:
 
-- 🏠Main page: `http://localhost:8080/`
-- 📤Upload page: `http://localhost:8080/upload`
-- 🖼️Images gallery: `http://localhost:8080/images-list`
+```bash
+docker compose down
+```
 
-## 🌍 API and Routes
+Remove containers and volumes:
+
+```bash
+docker compose down -v
+```
+
+---
+
+## Usage Flow
+
+### 1. Open the app
+After startup, open:
+
+```text
+http://localhost:8080
+```
+
+### 2. Upload an image
+Go to:
+
+```text
+http://localhost:8080/upload
+```
+
+Choose a supported image file and upload it.
+
+### 3. Copy the generated image URL
+The application returns a public path like:
+
+```text
+/images/<generated-filename>.png
+```
+
+### 4. Browse uploaded images
+Open:
+
+```text
+http://localhost:8080/images-list
+```
+
+You will see:
+- preview image;
+- filename;
+- URL;
+- delete button;
+- pagination controls.
+
+### 5. Delete an image
+Delete actions are performed by image ID through the backend.
+
+---
+
+## Routes and API
 
 ### Pages
 
-- `GET /` — home page
-- `GET /upload` — upload page
-- `GET /images-list` — image gallery page
+| Route | Description |
+|------|-------------|
+| `/` | Main page |
+| `/upload` | Upload page |
+| `/images-list` | Uploaded images page |
 
-### API
+### Backend/API
 
-- `POST /upload` — upload an image
-- `GET /api/images-list?page=1` — get paginated image metadata
-- `POST /delete/<id>` — delete image metadata and file by ID
+| Route | Method | Description |
+|------|--------|-------------|
+| `/upload` | `POST` | Upload image |
+| `/api/images-list?page=1` | `GET` | Return paginated image list |
+| `/delete/<id>` | `POST` | Delete image by ID |
 
-### Static and media
+### Static
 
-- `GET /static/...` — frontend assets
-- `GET /images/<filename>` — uploaded image served by Nginx
+| Route | Description |
+|------|-------------|
+| `/images/<filename>` | Serve uploaded image |
+| `/static/...` | Serve frontend static assets |
 
-## 🗄️ Database Schema
+---
 
-The application creates the following table on startup:
+## Database
 
-```sql
-CREATE TABLE IF NOT EXISTS images (
-    id SERIAL PRIMARY KEY,
-    filename TEXT NOT NULL,
-    original_name TEXT NOT NULL,
-    size INTEGER NOT NULL,
-    file_type TEXT NOT NULL,
-    upload_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-```
+The PostgreSQL database contains an `images` table initialized from `config/init.sql`.
 
-## 📄 Pagination
+### Table fields
 
-The gallery uses server-side pagination:
+- `id`
+- `filename`
+- `original_name`
+- `size`
+- `file_type`
+- `upload_time`
 
-- Default page size: **10 images per page**
-- Backend pagination: `LIMIT` + `OFFSET`
-- Frontend pagination: `Previous` / `Next` controls
+---
 
-## 🐳 Docker Volumes
+## Backups
 
-The project uses named volumes for persistence:
-
-- `db_data` — PostgreSQL data
-- `images` — uploaded image files
-- `logs` — application logs
-- `backups` — backup storage
-
-## 📝 Logging
-
-Application logs are written to:
-
-```text
-/logs/app.log
-```
-
-Since `/logs` is mounted as a Docker volume, logs persist across container restarts.
-
-## 💾 Backup and Restore
-
-The project includes a backup script located at:
-
-```text
-scripts/backup.py
-```
+The project includes `scripts/backup.py` for database backup management.
 
 ### Create a backup
 
@@ -300,65 +319,76 @@ python scripts/backup.py list
 python scripts/backup.py restore backup_YYYY-MM-DD_HHMMSS.sql
 ```
 
-### Notes
+Backups are stored in:
 
-- The script uses `docker exec` to run `pg_dump` and `psql` inside the PostgreSQL container.
-- Make sure `DB_CONTAINER_NAME` matches your actual database container name.
-- Backup files are stored in the directory defined by `BACKUP_DIR`.
+```text
+./backups
+```
 
-## 🧰 Useful Docker Commands
+---
 
-### Show running services
+## Troubleshooting
+
+### Images are not displayed
+Check that:
+- the `images` Docker volume is mounted in both `app` and `nginx`;
+- Nginx has a valid `location /images/` block;
+- files are actually written to `/images`.
+
+Useful commands:
+
+```bash
+docker compose exec app ls -la /images
+docker compose exec nginx ls -la /images
+```
+
+### Upload fails
+Check:
+- file type and size;
+- database connection;
+- backend logs.
+
+```bash
+docker compose logs app
+```
+
+### Database connection error
+Verify:
+- `.env` values;
+- PostgreSQL container status;
+- database availability.
+
+```bash
+docker compose ps
+docker compose logs db
+```
+
+### Backup script cannot find container
+Check the real container name:
 
 ```bash
 docker compose ps
 ```
 
-### View logs
-
-```bash
-docker compose logs -f
-```
-
-### Stop the application
-
-```bash
-docker compose down
-```
-
-### Stop the application and remove volumes
-
-```bash
-docker compose down -v
-```
-
-## 🔮 Possible Improvements
-
-A few ideas for future development:
-- Replace manual multipart parsing with a more robust request parser
-- Add image content validation using Pillow
-- Improve error handling and structured logging
-- Add tests for upload, gallery, delete, and backup flows
-- Add drag-and-drop progress indicator and user notifications
-
-## 📚 What I Practiced
-
-Through this project, I practiced and improved my skills in:
-
-- building a small full-stack web application
-- handling file uploads safely
-- validating user input on both the client and server sides
-- integrating Python with PostgreSQL
-- working with Docker Compose in a multi-service setup
-- configuring Nginx for reverse proxying and static file serving
-- implementing a paginated image gallery
-- writing backup and restore scripts for PostgreSQL
-
-This project was created as a practical portfolio piece to combine backend logic, database integration, frontend interaction, and Docker-based deployment in one application.
+Then update `DB_CONTAINER_NAME` in `.env` if needed.
 
 ---
 
-## 👨‍💻 Author
- 
-📌 Full-Stack Python Developer
-🔗 LinkedIn: (https://www.linkedin.com/in/stanislav-novhorodskiy-482924388/)
+## Future Improvements
+
+Possible next steps for this project:
+
+- drag-and-drop multi-file upload;
+- image search and filtering;
+- authentication and user accounts;
+- file type detection based on actual content;
+- automated tests;
+- CI/CD pipeline;
+- cloud storage integration (AWS S3, Cloudinary, etc.);
+- REST API documentation.
+
+---
+
+## Author
+
+Created as a backend/Docker/PostgreSQL learning project.
