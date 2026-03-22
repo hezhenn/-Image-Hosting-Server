@@ -361,4 +361,5 @@ This project was created as a practical portfolio piece to combine backend logic
 ## 👨‍💻 Author
  
 📌 Full-Stack Python Developer
+
 🔗 LinkedIn: (https://www.linkedin.com/in/stanislav-novhorodskiy-482924388/)
