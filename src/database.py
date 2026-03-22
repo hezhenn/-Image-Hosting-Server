@@ -13,7 +13,7 @@ class DatabaseManager:
         try:
             self.connection = psycopg2.connect(
                 host=os.getenv("DB_HOST"),
-                database = os.getenv("DB_DATABASE"),
+                database = os.getenv("DB_NAME"),
                 user = os.getenv("DB_USER"),
                 password = os.getenv("DB_PASSWORD"),
                 port = os.getenv("DB_PORT")
@@ -31,7 +31,7 @@ class DatabaseManager:
         try:
             with self.connection.cursor() as cursor:
                 cursor.execute("""
-                INSERT INTO metadata (filename, original_name, size, file_type) 
+                INSERT INTO images (filename, original_name, size, file_type) 
                 VALUES (%s, %s, %s, %s)""", (filename, original_name, size, file_type))
                 self.connection.commit()
                 return True
