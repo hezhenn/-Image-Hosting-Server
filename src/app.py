@@ -99,6 +99,17 @@ class ImageServerHandler(http.server.BaseHTTPRequestHandler):
                 file_type = ext
             )
 
+            if not saved_to_db:
+                delete_file(saved_name)
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({
+                    'success': False,
+                    'message': 'File saved, but database insert failed'
+                }).encode('utf-8'))
+                return
+
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
             self.end_headers()
