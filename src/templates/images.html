@@ -11,7 +11,6 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
         rel="stylesheet">
-
 </head>
 
 <body>
@@ -20,11 +19,12 @@
         <p class="upload__description">Upload selfies, memes, or any fun pictures here.</p>
     </section>
     <nav class="upload__tabs">
-        <button class="upload__tab" id="upload-tab-btn">Upload</button>
-        <button class="upload__tab upload__tab--active" id="images-tab-btn">Images</button>
+        <a class="upload__tab" id="upload-tab-btn" href="/upload">Upload</a>
+        <a class="upload__tab upload__tab--active" id="images-tab-btn" href="/images-list">Images</a>
     </nav>
     <section id="file-list-wrapper">
     </section>
+    <div id="pagination"></div>
 </body>
 <script src="/static/js/images.js"></script>
 
